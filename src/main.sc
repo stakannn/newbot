@@ -1,23 +1,50 @@
-require: slotfilling/slotFilling.sc
-  module = sys.zb-common
 theme: /
-
-    state: Start
-        q!: $regex</start>
-        a: Начнём.
-
     state: Hello
-        intent!: /привет
-        a: Привет привет
+        q!: *start
+        q!: * (прив*/хай/ку/здравствуй*/здрасте/здрасьте/хэлоу/здарова/дарова) *
+        q!: {~добрый * (~утро/~день/~вечер/~ночь/~время суток)} *
+        q: * (все/стоп/хватит/отстань/заново/снова/отмена) * || fromstate = /SuggestDay
+        random:
+            a: Привет! Подсказать тебе расписание кино?
+            a: Рад видеть! Хочешь узнать расписание кино?
+    
+    state: SuggestDay || modal = true
+        q: (да/конечно/давай/ага/~подсказать/~подсказывать/~хотеть)
+        random:
+            a: Когда планируешь пойти?
+            a: В какой день хочешь пойти?
+        buttons:
+            "Сегодня" 
+            "Завтра"
+            "Послезавтра"
+        
+        state: ChooseDay
+            q: Сегодня
+            q: Завтра
+            q: Послезавтра
+            go!: /SuggestMovie
+            
+        state: LocalCatchAll
+            event: noMatch
+            a: На этот день я пока не знаю расписание :(
+            go!: ..
+        
+    state: SuggestMovie
+        a: Какой фильм хочешь посмотреть? Сейчас идут:
+        buttons:
+            "Джон Уик 4"
+            "Три мушкетёра: Д'Артаньян"
+        
+        state: ChooseMovie
+            q: Джон Уик 4
+            q: Три мушкетёра: Д'Артаньян
 
-    state: Bye
-        intent!: /пока
-        a: Пока пока
+    state: CannotHelp
+        q: (нет/не/не хочу)
+        a: Я пока что больше ничего не умею. Но скоро обязательно научусь!
 
-    state: NoMatch
+    state: CatchAll || noContext = true
         event!: noMatch
-        a: Я не понял. Вы сказали: {{$request.query}}
-
-    state: Match
-        event!: match
-        a: {{$context.intent.answer}}
+        random:
+            a: Не совсем понял. Можешь по-другому как-то написать, пожалуйста?
+            a: Не понимаю :(  Можешь, пожалуйста, переформулировать?
